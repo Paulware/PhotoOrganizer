@@ -15,6 +15,7 @@ Or...Press the Code button and select Download Zip, then unzip the directory any
 <li>Click on the new photo to add tags</li>
 <li>Enter the tags for the photo, using a space between each tag</li>
 </ul>
+
 <p>
 <h2>How to create a slide show</h2>
 <ul>
@@ -22,3 +23,12 @@ Or...Press the Code button and select Download Zip, then unzip the directory any
 <li>Enter the number of seconds between photos</li>
 <li>Press Start Slideshow button</li>
 </ul>
+
+<p>
+<h2>How to send someone your collection, via a usb flash drive</h2>
+<ul>
+<li>Copy this directory to a usb flash drive</li>
+<li>Give the usb flash drive to someone</li>
+<li>They will be able run slide shows and filter photos based on tags</li>
+</ul>
+
