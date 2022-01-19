@@ -1,0 +1,371 @@
+<html><head>
+<SCRIPT LANGUAGE="VBScript">
+    Sub Window_onLoad
+        window.resizeTo 1200,800
+    End Sub 
+</SCRIPT>
+
+<script language="javascript" src="json2.js"></script>
+<script language="javascript" src="utilities.js"></script>
+<script language="javascript">
+   var debugIt = false;
+   var currentFilename = '';
+   var curdir = '';
+   var filters = [];
+   
+   function refresh() {
+      alert ( 'parent.refresh yo');
+   }
+
+   function Writedata()  {
+      var write_id;
+      write_id = document.getElementById('write_id').value ;
+      Alert('The data has been written to \n' + write_id);
+      var s = fso.CreateTextFile(write_id, true);
+      s.WriteLine(document.getElementById('name_id').value);
+      s.WriteLine ( 'hello yo' );
+      var json = {"id": 12};     
+      var jsonStr = JSON.stringify(json)
+      s.WriteLine ( jsonStr );    
+      s.Close();      
+   }
+   
+   function writeElement (id, value) {
+      var element = document.getElementById (id);
+      element.innerText = value; 
+   }
+   
+   function alreadyPhoto (target) { 
+      var photos = json.photos;
+      target = target.replace ( '\\', '/' );
+      target = relativePath (target);
+      for (var key in photos) {
+         if (key == target) { 
+            alert ( 'This photo exists: ' + target );
+            return true;
+         } else {
+            // alert ( 'key != target: ' + key + ' != ' + target );
+         }
+      }
+      return false; 
+   }
+   
+   function inDictionary(array, target) {
+      target = target.replace ( '\\', '/' );
+      for (var key in json) {
+         if (key == target) {a 
+            alert ( 'This trget is found in dictionary: ' + target );
+            return true;
+         } else {
+            alert ( 'key != target: ' + key + ' != ' + target );
+         }
+      }
+      return false; 
+   }
+
+    
+   function fileOnlyPath (filename) { 
+      newPath = clean(filename);
+      rIndex = newPath.lastIndexOf ( '/' );
+      return newPath.substring (rIndex + 1);
+   }
+   
+   function showPhoto (filename) { 
+      var element = document.getElementById ('image');
+      element.src = filename;
+   }
+   
+   function clearPhotos() {
+      var div = document.getElementById ( 'images');
+      var images = div.getElementsByTagName("img");
+      for (var i=0;i < images.length; i++) {
+         images[i].style.display = 'none';
+      }
+   }
+   
+   function goodFilename (filename) {
+      var good = true;
+      filename = relativePath (filename);
+      if (alreadyPhoto (filename) ) {
+         good = false;
+         alert ( 'goodFilename false, already in array: ' + filename );       
+      } else {
+         if (fso.FileExists (filename) ) {
+            good = false;
+            alert ( 'goodFilename false, this file already exists: ' + filename );
+         } 
+      }
+      return good;
+   }
+   
+   function findNewFilename (filename) { 
+      var ind = filename.indexOf ( '.' );
+      var name = filename.substring (0,ind);
+      var newName = '';
+      for (var i=0;i<999;i++) {
+         if (goodFilename(name + i + '.jpg')) { 
+            newName = name + i + '.jpg';
+            break;
+         }       
+      }
+      //alert ( 'Found new filename: ' + newName );
+      return newName;
+   }
+   
+   function copyPhoto() { 
+      var element = document.getElementById ( 'copyPhoto')
+      var copyPhoto = element.value; 
+      var filename = 'images/' + fileOnlyPath (copyPhoto);
+      if (filename.indexOf ( '.mp' ) > -1) { 
+         alert ( 'Sorry videos are not currently supported')
+         good = false;
+      } else {
+         if (goodFilename(filename)) { 
+            // alert ( 'This filename is ok, no need to change...');
+         } else { 
+            filename = findNewFilename (filename); 
+            alert ( 'New destination file: ' + filename );
+         }
+         
+         if (goodFilename (filename)) { 
+            json = readJson ();
+            json.photos[filename] = {"tags":[]}
+            if (copyFile (copyPhoto, filename )) { 
+              writeJson (jsonFilename, json);          
+              clearPhotos();
+              showPhotos();
+            }
+         }
+      }
+   }
+      
+   function showWindow(filename) {                
+      json = readJson ();         
+      filename = relativePath (filename);
+      var text = readFile ('window1.html');
+      var rotation = json.photos[filename].rotation;
+      // alert ( 'Got a rotation of: [' + rotation + ']');
+      if (rotation == 'left') { 
+         text = replaceAll ( text, '$style', 'filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3,mirror=1)')
+      } else if (rotation == 'right') { 
+         text = replaceAll ( text, '$style', 'filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=1,mirror=1)')
+      } else {
+         text = replaceAll ( text, '$style', 'filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=0,mirror=1)')
+      }
+      text = replaceAll (text, '$', filename);
+      writeFilename ( 'temp.html', text );
+      window.showModelessDialog ( 'temp.html', filename, 'dialogWidth:1200px;dialogHeight:800px'); 
+   }
+    
+   function noTags () {
+      missingTags = [];
+      json = readJson ();      
+      var photos = json.photos;
+      for (var filename in photos) {
+         tags = photos[filename].tags;
+         if (tags.length == 0) {      
+            missingTags.push (filename);
+         }
+      }
+      return missingTags;
+   }
+   
+   function goToNoTag () {   
+      var filenames = noTags();
+      if (filenames.length > 0) {          
+         showWindow (filenames[0]);
+      } else {
+         alert ('No photo found that was missing a tag');
+      }         
+   }
+   
+   function size(d){c=0; for (i in d) ++c; return c}
+   
+   function getSelectOption ( id ) {
+      var element = document.getElementById (id);
+      var options = element.options;
+      var value = '';
+      for (var i=0 ;i<options.length; i++) {
+         if (options[i].selected) {
+            value = options[i].value;
+            break;
+         }
+      }
+      return value;
+   }
+   
+   function filterList() { 
+      var photos = json.photos;
+      var filter1 = getSelectOption( 'filterSelect1');
+      var filter2 = getSelectOption( 'filterSelect2');
+      var filter3 = getSelectOption( 'filterSelect3');
+      var filenames = []; 
+      for (var filename in photos) {
+         tags = json.photos[filename].tags;
+         ok = false;       
+         if (inArray (tags, filter1) || (filter1 == 'Any') || (filter1 == '')) { 
+            if (inArray (tags, filter2) || (filter2 == 'Any') || (filter2 == '')) {  
+               if (inArray (tags, filter3) || (filter3 == 'Any') || (filter3 == '')) {  
+                  ok = true;
+               }
+            }   
+         }
+
+         if (ok) {          
+            // alert ( 'pushing ' + filename );
+            filenames.push (filename);
+         }            
+      }   
+      return filenames; 
+   }
+   
+   // Display all photos for user to select
+   function showPhotos() { 
+      var element = document.getElementById ('images');
+      var img;
+      var tags;
+      var ok; 
+      var count = 0;
+      var filenames = filterList();
+      
+      if (filenames.length < 30) {       
+         for (var i=0; i<filenames.length; i++) { 
+            img = document.createElement ( 'img' );         
+            filename = filenames[i];
+            img.src = filename;
+            // img.style = 'filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3,mirror=1)'
+            img.style.width = '100px';
+            img.style.height = '100px';
+            img.onclick = function () {showWindow(this.src) };
+            element.appendChild (img);
+         }      
+      } else {
+         for (var i = 0; i<filenames.length; i++) { 
+            if (i > (filenames.length - 20)) {
+               filename = filenames[i];
+               img = document.createElement ( 'img' );         
+               img.src = filename;
+               img.style.width = '100px';
+               img.style.height = '100px';
+               img.onclick = function () {showWindow(this.src) };
+               element.appendChild (img);
+            }
+            count = count + 1;            
+         }
+      }
+   }
+   
+   function readFilter (filter) { 
+      var value = '';
+      var filters = json.filters;
+      if (json.hasOwnProperty ('filters') ) { 
+         if (filter < filters.length) {
+            value = filters[filter];
+         }
+      }   
+      // alert ( 'value for filter[' + filter + ']=' + value);
+      return value;
+   }
+   
+   function loadBody() {
+      showPhotos();
+      
+      clearSelect ("filterSelect1");
+      addAllTags ( 'filterSelect1', readFilter(0));
+
+      clearSelect ("filterSelect2");
+      addAllTags ( 'filterSelect2', readFilter(1));
+
+      clearSelect ("filterSelect3");
+      addAllTags ( 'filterSelect3', readFilter(2));
+      
+      filterRefresh (); // Apply the filters
+
+   }
+   
+   function filterRefresh () {
+      var filters = [];
+      filters.push ( document.getElementById ( 'filterSelect1' ).value );
+      filters.push ( document.getElementById ( 'filterSelect2' ).value );
+      filters.push ( document.getElementById ( 'filterSelect3' ).value );
+      json.filters = filters;
+      writeJson (jsonFilename, json);
+      //alert ( 'Filters: ' + filters + ' written to: ' + jsonFilename);      
+      
+      clearPhotos();
+      showPhotos();
+   }
+   
+   function lastModified (filename) { 
+      f = fso.GetFile (filename);
+      var d = f.DateLastModified;
+      alert ( filename + ' last modified: ' + d)
+      return d;
+   }
+ 
+   function startSlideShow() {
+      var filename = 'temp.hta';
+      var filenames = filterList();
+      var names = '';
+      var seconds = document.getElementById ('seconds').value;
+      
+      for (var i=0; i<filenames.length; i++) {
+         if (names != '') { 
+            names = names + ','; 
+         }            
+         names = names + '\"' + filenames[i] + '\"';
+      }
+      var text = '<html>\n' +
+                 '<head>\n' + 
+                 '<script language=\"javascript\">\n' + 
+                 '  var index = 0;\n'   + 
+                 '  var names = [' + names + '];\n' +                  
+                 '  function loadBody() {\n' + 
+                 '     document.getElementById (\"image\").src = names[0];\n' + 
+                 '  }\n' + 
+                 '  var interval = setInterval(function() {index = (index + 1) % names.length; document.getElementById (\"image\").src=names[index] }, ' + seconds + '000);\n' +
+                 '<\/script>\n' + 
+                 '<body onload=loadBody();>\n' + 
+                 '<img id=\"image\" style=\"height:100%;\">\n' +
+                 '<hr><input type=\"button\" value=\"stop\" onclick=\"clearInterval(interval);\">\n' +                  
+                 '<\/body>\n' + 
+                 '<\/html>\n';
+      
+      writeFilename ( filename, text );
+      window.showModelessDialog ( filename, 'SlideShow', 'dialogWidth:1200px;dialogHeight:800px');      
+   }
+   
+</script>
+</head>
+
+Click Browse to add a photo... <input type="file"  onchange="copyPhoto()" id="copyPhoto"><br>
+<hr>
+
+<span id="status">
+</span>
+
+Current filter(s): 
+       <select id="filterSelect1">
+       </select>
+       <select id="filterSelect2">
+       </select> 
+       <select id="filterSelect3">
+       </select>
+       <input type="button" value="Apply Filter" onclick="filterRefresh()">
+<hr>      
+Create Slideshow based on above filters <input type="button" value ="Start Slideshow" onclick="startSlideShow"> <br>
+Cycle photo every <input id="seconds" value="20"> seconds<br>
+<hr>
+<h2>Current Filtered Images</h2>
+
+<hr>
+<! This is where all images are displayed> 
+<div id="images">
+</div>
+
+<hr>
+<script language="javascript">
+   loadBody();
+</script>
+</body>
+</html>

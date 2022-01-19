@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Information about $</title>
+<meta http-equiv="x-ua-compatible" content="ie=edge" />
+<!--All link, style and script tags, or any code should be placed below the five lines above -->
+
+   <title>Add Information about $</title>
+   <script language="javascript" src="json2.js"></script>
+   <script language="javascript" src="utilities.js"></script>
+   <script language='javascript'>
+      
+      var filename = relativePath ('$') 
+      document.title = filename;      
+      
+      function createTag () {
+         var element = document.getElementById ( 'createTag' );
+         var newTag = element.value;'associateTag'
+         if (inArray(json.tags, newTag)) {
+            alert ( 'This tag already exists: ' + newTag);
+         } else {
+            json.tags.push (newTag);
+            writeJson ( jsonFilename, json);
+            addAllTags('associateTag',''); 
+            window.parent.refresh();            
+         }
+      }
+      
+      function associateTag () {
+         var select = document.getElementById ('associateTag');
+         var tag = select.value;
+         addTagToPhoto (tag, filename);
+         showPhotoTags(filename);
+      }
+      
+      function removeTag () {
+         var select = document.getElementById ('associateTag');
+         var tag = select.value;
+         removeTagFromPhoto (tag, filename);
+      }
+      
+      function showPhotoTags () {         
+         //alert ( 'showPhotoTags for : ' + filename ); 
+         var element = document.getElementById ( 'currentTags' );
+         var photoTags = json.photos[filename].tags;
+         photoTags.sort();         
+         // alert ( 'Got tags: ' + photoTags);
+         innerText = 'Tags ';
+         for (var i=0; i<photoTags.length; i++ ) {
+            innerText = innerText + ' ' + photoTags[i];
+         }         
+         element.innerText = innerText;
+      }
+            
+      function loadPhoto() {
+         var element = document.getElementById ( 'photo');
+         var width = parseInt (element.width);
+         var height = parseInt (element.height);
+         if (width > height) { 
+            element.width = 1200;
+         } else {
+            element.height = 1200;
+         }
+         //alert ( 'Width of photo: ' + element.width);
+      }      
+            
+      function deleteImage() {
+         delete json.photos[filename]; 
+         yes = prompt ( 'Are you sure you wish to delete: ' + filename, 'yes');
+         if (yes == 'yes') { 
+            writeJson (jsonFilename, json);
+            alert ( 'This image was removed: ' + filename + ' please refresh main window');
+         }
+      }
+      
+      function inArrayLower(array, target) {
+         var found = -1
+         var str1 = target.toLowerCase();
+         var str2;
+         for (var j=0; j<array.length; j++) {
+            str2 = array[j].toLowerCase();
+            if (str1 == str2) {
+               found = j;
+               break;
+            }
+         }
+         return found
+      }
+      
+      function textTags() {
+         var element = document.getElementById ( 'textTags');
+         var value = element.value;
+         var values = value.split (' ');
+         var tags = json.photos[filename].tags;
+         var ind;
+         var response;
+         var photoTags;
+         var skip;
+         var ch;
+         for (var i=0; i<values.length; i++) {
+            skip = false;
+            val = values[i];
+            ind = inArrayLower (json.tags, val);
+            
+            if (ind > -1) {
+               val = json.tags[ind];
+            } else if (val != '') {
+               ch = val.toUpperCase().substring (0,1);
+               val = ch + val.substring (1);
+               
+               response = prompt ( 'Add ' + val + ' to the list of all tags?','yes');
+               if (response == 'yes') {
+                  json.tags.push (val);
+                  writeJson (jsonFilename, json);
+               } else { 
+                  skip = true;
+               }
+            }
+            if (!skip) { 
+               addTagToPhoto (val, filename);
+               showPhotoTags(filename);                       
+               element.value = '';
+            }               
+         }
+      }
+      
+      
+      function scriptingVersion() {
+         var ver = ScriptEngine() + ' V ';
+         ver += ScriptEngineMajorVersion() + '.';
+         ver += ScriptEngineMinorVersion() + '.';
+         ver += ScriptEngineBuildVersion();
+         alert('Scripting Engine version: ' + ver)         
+         return ver;
+      }
+      
+      function loadBody() {
+         var rotationSelected = json.photos[filename].rotation;
+         loadPhoto();
+         addAllTags('associateTag', '');
+         showPhotoTags(filename);     
+         
+         if (rotationSelected == 'none') { 
+            document.getElementById ('noRotation').checked = true;
+         } else if (rotationSelected == 'left') { 
+            document.getElementById ('leftRotation').checked = true;
+         } else if (rotationSelected == 'right') {
+            document.getElementById ('rightRotation').checked = true;
+         } else {
+            document.getElementById ('noRotation').checked = true;
+         }
+      }
+            
+      </script>
+    </head>
+    <body onload="loadBody();">
+       <div>
+          <img id='photo' src="$" />
+       </div>
+
+       <br>
+       <span id='currentTags'>
+          Hello
+       </span>
+       <hr>
+       Add existing tag to image:
+       <select id="associateTag">
+          <option>tag1</option>
+          <option>tag2</option>
+       </select>
+       
+       <input type="button" value="Associate tag" onclick="associateTag();"> <input type="button" value="Remove Tag" onclick="removeTag();"><br>
+       <hr>
+       Add tags (place a space between each tag): <input id="textTags"><input type="button" value="Add" onclick="textTags();"><hr>
+       <hr>
+       <input type="button" value="Delete this image" onclick="deleteImage('$');">
+    </body>
+    </html>
