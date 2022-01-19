@@ -19,5 +19,6 @@ Or...Press the Code button and select Download Zip, then unzip the directory any
 <h2>How to create a slide show</h2>
 <ul>
 <li>Select filter (1,2,3) tags that will describe the photos for the slide show</li>
+<li>Enter the number of seconds between photos</li>
 <li>Press Start Slideshow button</li>
 </ul>
