@@ -27,7 +27,7 @@ Or...Press the Code button and select Download Zip, then unzip the directory any
 <p>
 <h2>How to send someone your collection, via a usb flash drive</h2>
 <ul>
-<li>Copy this directory to a usb flash drive</li>
+<li>Copy this directory (and subdirectories) to a usb flash drive</li>
 <li>Give the usb flash drive to someone</li>
 <li>They will be able run slide shows and filter photos based on tags</li>
 </ul>
