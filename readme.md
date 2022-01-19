@@ -32,3 +32,6 @@ Or...Press the Code button and select Download Zip, then unzip the directory any
 <li>They will be able run slide shows and filter photos based on tags</li>
 </ul>
 
+<hr>
+Note: The images directory is necessary as that is where photos are copied to.
+
